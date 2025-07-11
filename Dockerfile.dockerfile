@@ -12,16 +12,16 @@
 FROM ubuntu:latest  
 
 # information about maintainer
-MAINTAINER yves
+LABEL maintainer="yves"
 
 # add the bash script
-ADD install.sh /
-# change rights for the script
-RUN chmod u+x /install.sh
-# run the bash script
-RUN /install.sh
+COPY install.sh /install.sh
+
+# change rights & run the script（同じレイヤーで）
+RUN chmod +x /install.sh && /bin/bash /install.sh
+
 # prepend the new path
-ENV PATH /root/miniconda3/bin:$PATH
+ENV PATH=/root/miniconda3/bin:$PATH
 
 # execute IPython when container is run
 CMD ["ipython"]
