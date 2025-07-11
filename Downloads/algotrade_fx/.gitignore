@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+*.ipynb_checkpoints/
+
+# virtual env
+venv/
+.env
+
+# data
+data/raw/
+data/processed/
+
+# misc
+.DS_Store
