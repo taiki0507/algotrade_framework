@@ -1,36 +1,47 @@
 #!/bin/bash
 #
-# Script to Install
-# Linux System Tools and
-# Basic Python Components
+# Linux システムツールと
+# 基本的なPythonコンポーネントの
+# インストールスクリプト
 #
 # Python for Algorithmic Trading
 # (c) Dr. Yves J. Hilpisch
 # The Python Quants GmbH
 #
-# GENERAL LINUX
-apt-get update  # updates the package index cache
-apt-get upgrade -y  # updates packages
-# installs system tools
-apt-get install -y bzip2 gcc git  # system tools
-apt-get install -y htop screen vim wget  # system tools
-apt-get upgrade -y bash  # upgrades bash if necessary
-apt-get clean  # cleans up the package index cache
 
-# INSTALL MINICONDA
-# downloads Miniconda
-# For x86_64
-# wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O Miniconda.sh
-# For Apple Silicon
-wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-aarch64.sh -O Miniconda.sh
-bash Miniconda.sh -b  # installs it
-rm -rf Miniconda.sh  # removes the installer
-export PATH="/root/miniconda3/bin:$PATH"  # prepends the new path
+set -e  # エラー時は終了
 
-# INSTALL PYTHON LIBRARIES
-conda install -y pandas  # installs pandas
-conda install -y ipython  # installs IPython shell
+# 一般的なLinuxパッケージ
+apt-get update
+apt-get upgrade -y
+apt-get install -y bzip2 gcc git
+apt-get install -y htop screen vim wget
+apt-get upgrade -y bash
+apt-get clean
 
-# CUSTOMIZATION
-cd /root/
-wget http://hilpisch.com/.vimrc  # Vim configuration	
+# --- Miniconda（CPUアーキテクチャを検出して自動選択）-----------------
+ARCH=$(uname -m)
+if [ "$ARCH" = "x86_64" ]; then
+    MINICONDA=Miniconda3-latest-Linux-x86_64.sh
+else
+    MINICONDA=Miniconda3-latest-Linux-aarch64.sh
+fi
+
+echo "アーキテクチャ $ARCH 用のMinicondaをダウンロード中..."
+wget -q https://repo.anaconda.com/miniconda/$MINICONDA -O Miniconda.sh
+bash Miniconda.sh -b -p /root/miniconda3
+rm -f Miniconda.sh
+
+# condaを初期化
+export PATH="/root/miniconda3/bin:$PATH"
+/root/miniconda3/bin/conda init bash
+
+# --- .vimrc（失敗してもビルドを止めない）--------------------
+wget -q https://hilpisch.com/.vimrc -O /root/.vimrc || echo "警告: .vimrcをダウンロードできませんでした"
+
+# Pythonライブラリのインストール
+echo "Pythonライブラリをインストール中..."
+conda install -y pandas
+conda install -y ipython
+
+echo "インストールが正常に完了しました！"

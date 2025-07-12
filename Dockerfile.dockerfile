@@ -1,27 +1,47 @@
 #
-# Building a Docker Image with
-# the Latest Ubuntu Version and
-# Basic Python Install
+# 最新Ubuntu版での
+# Dockerイメージ構築と
+# 基本Pythonインストール
 # 
 # Python for Algorithmic Trading
 # (c) Dr. Yves J. Hilpisch
 # The Python Quants GmbH
 #
 
-# latest Ubuntu version
+# 最新のUbuntuバージョン
 FROM ubuntu:latest  
 
-# information about maintainer
+# メンテナー情報
 LABEL maintainer="yves"
 
-# add the bash script
-COPY install.sh /install.sh
+# 依存パッケージのインストール
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        bzip2 gcc git htop screen vim wget ca-certificates && \
+    apt-get upgrade -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# change rights & run the script（同じレイヤーで）
-RUN chmod +x /install.sh && /bin/bash /install.sh
+# Minicondaのダウンロードとインストール - バッシュシェルを明示的に使用
+SHELL ["/bin/bash", "-c"]
+RUN wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh && \
+    chmod +x /tmp/miniconda.sh && \
+    /tmp/miniconda.sh -b -p /root/miniconda3 && \
+    rm /tmp/miniconda.sh
 
-# prepend the new path
-ENV PATH=/root/miniconda3/bin:$PATH
+# condaの初期化とPATHの設定
+RUN /root/miniconda3/bin/conda init bash && \
+    echo 'export PATH="/root/miniconda3/bin:$PATH"' >> /root/.bashrc
 
-# execute IPython when container is run
+# .vimrcのダウンロード（失敗してもエラーにならないように）
+RUN wget -q https://hilpisch.com/.vimrc -O /root/.vimrc || echo "警告: .vimrcをダウンロードできませんでした"
+
+# PATHを設定してcondaコマンドを使えるようにする
+ENV PATH="/root/miniconda3/bin:${PATH}"
+
+# Pythonライブラリをインストール
+RUN conda install -y pandas ipython && \
+    conda clean -afy
+
+# コンテナ実行時にIPythonを起動
 CMD ["ipython"]
